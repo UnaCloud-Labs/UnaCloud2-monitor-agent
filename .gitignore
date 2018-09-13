@@ -88,8 +88,11 @@ celerybeat-schedule
 
 # Environments
 .env
+.venv
 env/
+venv/
 env.bak/
+venv.bak/
 
 # PyCharm settings
 .idea/
