@@ -1,3 +1,4 @@
+import sys
 from time import time, sleep
 
 from utils.cpu_utils import CPUUtils
@@ -15,10 +16,11 @@ disk_utils = DiskUtils()
 
 
 def main():
+    frequency = int(sys.argv[1]) if len(sys.argv) > 1 else 1
     while True:
         start_time = time()
         print(db_helper.post(get_system_info()))
-        sleep(1 - ((time() - start_time) % 1))
+        sleep(frequency - ((time() - start_time) % frequency))
 
 
 def get_system_info():
