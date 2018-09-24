@@ -18,11 +18,15 @@ disk_utils = DiskUtils()
 
 def main():
     frequency = int(sys.argv[1]) if len(sys.argv) > 1 else 1
-    while True:
+    infinite = len(sys.argv) < 3
+    duration = int(sys.argv[2]) if not infinite else 0
+    while duration > 0 or infinite:
         start_time = time()
         print(db_helper.post(get_system_info()))
         print(monitor.get_process_stats())
         sleep(frequency - ((time() - start_time) % frequency))
+        if not infinite:
+            duration = duration - frequency
 
 
 def get_system_info():
