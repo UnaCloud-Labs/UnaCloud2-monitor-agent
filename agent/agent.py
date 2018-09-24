@@ -27,6 +27,7 @@ def main():
         sleep(frequency - ((time() - start_time) % frequency))
         if not infinite:
             duration = duration - frequency
+    monitor.report()
 
 
 def get_system_info():

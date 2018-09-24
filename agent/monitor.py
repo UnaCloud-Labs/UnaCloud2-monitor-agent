@@ -46,10 +46,10 @@ def report():
     avg_memory_percent = average(memory_percent_list)
     avg_cpu_percent = average(cpu_percent_list)
 
-    avg_memory_file.write(avg_memory_percent)
-    avg_cpu_file.write(avg_cpu_percent)
-    memory_file.write(str.join(memory_percent_list, ","))
-    cpu_file.write(str.join(cpu_percent_list, ","))
+    avg_memory_file.write(str(avg_memory_percent) + "\n")
+    avg_cpu_file.write(str(avg_cpu_percent) + "\n")
+    memory_file.write(",".join(str(m) for m in memory_percent_list) + "\n")
+    cpu_file.write(",".join(str(c) for c in cpu_percent_list) + "\n")
 
 def average(l):
     return sum(l) / len(l)
