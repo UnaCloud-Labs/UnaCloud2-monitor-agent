@@ -6,6 +6,7 @@ from utils.ram_utils import RAMUtils
 from utils.disk_utils import DiskUtils
 
 import db_helper
+import monitor
 
 
 network_utils = NetworkUtils()
@@ -18,6 +19,7 @@ def main():
     while True:
         start_time = time()
         print(db_helper.post(get_system_info()))
+        print(monitor.get_process_stats())
         sleep(1 - ((time() - start_time) % 1))
 
 
@@ -33,7 +35,6 @@ def get_system_info():
         "net_stats": network_utils.get_net_stats(),
         "net_io_counters": network_utils.get_net_io_counters()
     }
-
 
 if __name__ == "__main__":
     main()
