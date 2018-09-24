@@ -4,7 +4,6 @@ from utils.cpu_utils import CPUUtils
 from utils.network_utils import NetworkUtils
 from utils.ram_utils import RAMUtils
 from utils.disk_utils import DiskUtils
-from utils.vm_utils import VMUtils
 
 import db_helper
 
@@ -13,7 +12,6 @@ network_utils = NetworkUtils()
 cpu_utils = CPUUtils()
 ram_utils = RAMUtils()
 disk_utils = DiskUtils()
-vm_utils = VMUtils()
 
 
 def main():
