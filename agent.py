@@ -7,7 +7,7 @@ from utils.ram_utils import RAMUtils
 from utils.disk_utils import DiskUtils
 from utils.vm_utils import VMUtils
 
-import db_helper
+import helpers.db_helper as db_helper
 
 
 FREQUENCY = 1
