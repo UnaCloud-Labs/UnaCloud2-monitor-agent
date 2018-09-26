@@ -6,6 +6,7 @@ from utils.network_utils import NetworkUtils
 from utils.ram_utils import RAMUtils
 from utils.disk_utils import DiskUtils
 from utils.vm_utils import VMUtils
+from utils.process_utils import ProcessUtils
 
 import db_helper
 
@@ -20,6 +21,7 @@ cpu_utils = CPUUtils()
 ram_utils = RAMUtils()
 disk_utils = DiskUtils()
 vm_utils = VMUtils()
+unacloud_process = ProcessUtils("UNACLOUD_PROCESS")
 
 
 def parse_arguments():
@@ -66,7 +68,8 @@ def get_system_info():
         "net_stats": network_utils.get_net_stats(),
         "net_io_counters": network_utils.get_net_io_counters(),
         "vms": vm_utils.get_vms(running=False),
-        "running_vms": vm_utils.get_vms()
+        "running_vms": vm_utils.get_vms(),
+        "unacloud_status": unacloud_process.get_process_status()
     }
 
 
