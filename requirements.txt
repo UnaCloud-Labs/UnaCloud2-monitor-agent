@@ -1,3 +1,2 @@
 psutil
-pylint
 requests
