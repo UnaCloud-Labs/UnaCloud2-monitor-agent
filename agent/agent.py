@@ -1,4 +1,4 @@
-import sys
+import argparse, sys
 from time import time, sleep
 
 from utils.cpu_utils import CPUUtils
@@ -10,6 +10,11 @@ from utils.vm_utils import VMUtils
 import db_helper
 
 
+FREQUENCY = 1
+INFINITE = True
+DURATION = 0
+UNACLOUD_PROCESS = "unacloud"
+
 network_utils = NetworkUtils()
 cpu_utils = CPUUtils()
 ram_utils = RAMUtils()
@@ -17,16 +22,36 @@ disk_utils = DiskUtils()
 vm_utils = VMUtils()
 
 
+def parse_arguments():
+    parser=argparse.ArgumentParser(description="Monitor the machine's resources")
+    parser.add_argument('-f', '--frequency', type=int,
+                        help='Frequency (in seconds) with which the agent will send system information')
+    parser.add_argument('-d', '--duration', type=int,
+                        help='Duration (in seconds) for which the problem will run')
+    parser.add_argument('-pn', '--pname', type=str,
+                        help='Name of the process that wants to be watched')
+    args = parser.parse_args()
+    if args.frequency:
+        global FREQUENCY
+        FREQUENCY = args.frequency
+    if args.duration:
+        global DURATION, INFINITE
+        DURATION = args.duration
+        INFINITE = False
+    if args.pname:
+        global UNACLOUD_PROCESS
+        UNACLOUD_PROCESS = args.pname
+
+
 def main():
-    frequency = int(sys.argv[1]) if len(sys.argv) > 1 else 1
-    infinite = len(sys.argv) < 3
-    duration = int(sys.argv[2]) if not infinite else 0
-    while duration > 0 or infinite:
+    parse_arguments()
+    curr_duration = DURATION
+    while (curr_duration > 0) or INFINITE:
         start_time = time()
         print(db_helper.post(get_system_info()))
-        if not infinite:
-            duration = duration - frequency
-        sleep(frequency - ((time() - start_time) % frequency))
+        if not INFINITE:
+            curr_duration = curr_duration - FREQUENCY
+        sleep(FREQUENCY - ((time() - start_time) % FREQUENCY))
 
 
 def get_system_info():
