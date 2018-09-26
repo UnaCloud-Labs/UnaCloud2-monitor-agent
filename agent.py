@@ -1,14 +1,13 @@
-import argparse, sys
-from time import time, sleep
-
-from utils.cpu_utils import CPUUtils
-from utils.network_utils import NetworkUtils
-from utils.ram_utils import RAMUtils
-from utils.disk_utils import DiskUtils
-from utils.vm_utils import VMUtils
+import argparse
+import sys
+from time import sleep, time
 
 import helpers.db_helper as db_helper
-
+from utils.cpu_utils import CPUUtils
+from utils.disk_utils import DiskUtils
+from utils.network_utils import NetworkUtils
+from utils.ram_utils import RAMUtils
+from utils.vm_utils import VMUtils
 
 FREQUENCY = 1
 INFINITE = True

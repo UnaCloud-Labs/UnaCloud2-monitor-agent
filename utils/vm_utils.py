@@ -10,4 +10,7 @@ class VMUtils:
                                           "list",
                                           "runningvms" if running else "vms"]
                                         ).decode().strip()
-        return result.split("\r\n")
+        if result:
+            return len(result.split("\r\n"))
+        else:
+            return 0
