@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import sys
 from time import sleep, time
 
@@ -55,7 +56,7 @@ def main():
 
 def get_system_info():
     return {
-        "timestamp": time(),
+        "timestamp": format_time(),
         "ip": network_utils.get_ip_addr(),
         "ram": ram_utils.get_ram_percent(),
         "swap": ram_utils.get_swap_memory(),
@@ -65,8 +66,13 @@ def get_system_info():
         "net_stats": network_utils.get_net_stats(),
         "net_io_counters": network_utils.get_net_io_counters(),
         "vms": vm_utils.get_vms(running=False),
-        "running_vms": vm_utils.get_vms()
+        "running_vms": vm_utils.get_vms(),
+        "vbox_status": 1,
+        "unacloud_status": 1
     }
+
+def format_time():
+    return datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
 
 if __name__ == "__main__":
