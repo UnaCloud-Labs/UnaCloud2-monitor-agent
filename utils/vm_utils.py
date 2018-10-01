@@ -1,4 +1,5 @@
 import subprocess
+from utils.process_utils import ProcessUtils
 
 class VMUtils:
     
@@ -18,6 +19,8 @@ class VMUtils:
         else:
             return 0
 
-    def get_vbox_processes(self):
-        processes = subprocess.check_output(["tasklist"]).decode().strip().split("\r\n")
-        return len(processes)
+    def get_vbox_status(self):
+        for p in ProcessUtils.get_processes_by_name(self.VBOX_PROCESS):
+            if p.status() != "running":
+                return 0
+        return 1

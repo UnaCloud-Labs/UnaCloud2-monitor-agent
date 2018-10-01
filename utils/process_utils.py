@@ -29,11 +29,15 @@ class ProcessUtils:
 
     @staticmethod
     def count_processes_by_name(name):
-        count = 0
+        return len(ProcessUtils.get_processes_by_name(name))
+
+    @staticmethod
+    def get_processes_by_name(name):
+        processes = []
         for p in psutil.process_iter(attrs=['name']):
             if name in p.info['name']:
-                count = count + 1
-        return count
+                processes.append(p)
+        return processes
     
     @staticmethod
     def get_process_ports(p):

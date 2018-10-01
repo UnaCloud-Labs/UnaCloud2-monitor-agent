@@ -22,10 +22,11 @@ ram_utils = RAMUtils()
 disk_utils = DiskUtils()
 vm_utils = VMUtils()
 vbox_process = ProcessUtils(VMUtils.VBOX_PROCESS)
-unacloud_process = ProcessUtils(port=UNACLOUD_PORT)
+unacloud_process = None
 
 
 def parse_arguments():
+    global unacloud_process
     parser=argparse.ArgumentParser(description="Monitor the machine's resources")
     parser.add_argument('-f', '--frequency', type=int,
                         help='Frequency (in seconds) with which the agent will send system information')
@@ -42,9 +43,9 @@ def parse_arguments():
         DURATION = args.duration
         INFINITE = False
     if args.pport:
-        global UNACLOUD_PORT, unacloud_process
+        global UNACLOUD_PORT
         UNACLOUD_PORT = args.pport
-        unacloud_process = ProcessUtils(port=UNACLOUD_PORT)
+    unacloud_process = ProcessUtils(port=UNACLOUD_PORT)
 
 
 def main():
@@ -52,7 +53,7 @@ def main():
     curr_duration = DURATION
     while (curr_duration > 0) or INFINITE:
         start_time = time()
-        print(db.post(get_system_info()))
+        print(get_system_info())
         if not INFINITE:
             curr_duration = curr_duration - FREQUENCY
         sleep(FREQUENCY - ((time() - start_time) % FREQUENCY))
@@ -71,9 +72,9 @@ def get_system_info():
         "net_io_counters": network_utils.get_net_io_counters(),
         "vms": vm_utils.get_vms(running=False),
         "running_vms": vm_utils.get_vms(),
-        "vbox_status": vbox_process.get_process_status(),
+        "virtualbox_status": vm_utils.get_vbox_status(),
         "vbox_process_count": ProcessUtils.count_processes_by_name(VMUtils.VBOX_PROCESS),
-        "unacloud_status": unacloud_process.get_process_status()
+        "unacloud_status": 1 if unacloud_process.get_process_status() == "running" else 0
     }
 
 
