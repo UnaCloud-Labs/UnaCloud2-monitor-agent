@@ -1,4 +1,5 @@
 import psutil
+import helpers.data_helper as dh
 
 
 class CPUUtils:
@@ -7,4 +8,4 @@ class CPUUtils:
         return psutil.cpu_percent()
 
     def get_percpu_peruser_percent(self):
-        return dict(psutil.cpu_times_percent()._asdict())
+        return dh.ntuple_to_dict(psutil.cpu_times_percent())

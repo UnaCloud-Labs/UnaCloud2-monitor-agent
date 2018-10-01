@@ -1,10 +1,11 @@
 import psutil
+import helpers.data_helper as dh
 
 
 class RAMUtils:
 
     def get_ram_percent(self):
-        return dict(psutil.virtual_memory()._asdict())
+        return dh.ntuple_to_dict(psutil.virtual_memory())
 
     def get_swap_memory(self):
-        return dict(psutil.swap_memory()._asdict())
+        return dh.ntuple_to_dict(psutil.swap_memory())

@@ -1,5 +1,6 @@
 import psutil
 from urllib.request import urlopen
+import helpers.data_helper as dh
 
 
 class NetworkUtils:
@@ -10,8 +11,8 @@ class NetworkUtils:
     def get_net_stats(self):
         stats = psutil.net_if_stats()
         for key, value in stats.items():
-            stats[key] = dict(value._asdict())
+            stats[key] = dh.ntuple_to_dict(value)
         return stats
 
     def get_net_io_counters(self):
-        return dict(psutil.net_io_counters()._asdict())
+        return dh.ntuple_to_dict(psutil.net_io_counters())
