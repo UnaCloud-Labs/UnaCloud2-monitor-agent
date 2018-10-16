@@ -1,8 +1,7 @@
 import requests
 
 
-#  TODO - Check hardcoded value
-url = "http://52.36.93.215:3000/createMetric"
+url = "http://157.253.205.40:3000/createMetric"
 
 
 def post(payload):

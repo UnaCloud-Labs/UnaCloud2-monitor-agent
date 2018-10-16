@@ -52,7 +52,7 @@ def main():
     curr_duration = DURATION
     while (curr_duration > 0) or INFINITE:
         start_time = time()
-        print(db.post(get_system_info()))
+        db.post(get_system_info())
         if not INFINITE:
             curr_duration = curr_duration - FREQUENCY
         sleep(FREQUENCY - ((time() - start_time) % FREQUENCY))
