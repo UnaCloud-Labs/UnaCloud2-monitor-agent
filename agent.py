@@ -50,14 +50,11 @@ def parse_arguments():
 
 def main():
     parse_arguments()
+    db.post_hardware_info(get_initial_info())
     curr_duration = DURATION
     while (curr_duration > 0) or INFINITE:
         start_time = time()
-<<<<<<< HEAD
-        print(get_system_info())
-=======
-        db.post(get_system_info())
->>>>>>> 903b6dbc1736351e22c22cd0eeeb315d915561b0
+        db.post_metric(get_system_info())
         if not INFINITE:
             curr_duration = curr_duration - FREQUENCY
         sleep(FREQUENCY - ((time() - start_time) % FREQUENCY))
@@ -72,13 +69,21 @@ def get_system_info():
         "disk": disk_utils.get_disk_percent(),
         "cpu": cpu_utils.get_cpu_percent(),
         "cpu_details": cpu_utils.get_percpu_peruser_percent(),
-        "net_stats": network_utils.get_net_stats(),
         "net_io_counters": network_utils.get_net_io_counters(),
         "vms": vm_utils.get_vms(running=False),
         "running_vms": vm_utils.get_vms(),
         "virtualbox_status": vm_utils.get_vbox_status(),
         "vbox_process_count": ProcessUtils.count_processes_by_name(VMUtils.VBOX_PROCESS),
         "unacloud_status": 1 if unacloud_process.get_process_status() == "running" else 0
+    }
+
+def get_initial_info():
+    return {
+        "cpu_count": cpu_utils.get_cpu_count(),
+        "disk_partitions": disk_utils.get_disk_partitions(),
+        "total_ram": ram_utils.get_ram_percent(total=True),
+        "total_swap": ram_utils.get_swap_memory(total=True),
+        "total_disc": disk_utils.get_disk_percent(total=True)
     }
 
 
