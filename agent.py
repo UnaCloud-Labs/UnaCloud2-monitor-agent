@@ -16,6 +16,11 @@ INFINITE = True
 DURATION = 0
 UNACLOUD_PORT = 10027
 
+RAM_THRESHOLD = 75
+CPU_THRESHOLD = 75
+DISK_THRESHOLD = 75
+NUM_PROCESSES = 5
+
 network_utils = NetworkUtils()
 cpu_utils = CPUUtils()
 ram_utils = RAMUtils()
@@ -34,18 +39,46 @@ def parse_arguments():
                         help='Duration (in seconds) for which the problem will run')
     parser.add_argument('-pp', '--pport', type=int,
                         help='Port in which the UnaCloud process is running')
+    parser.add_argument('-ramth', '--ramthreshold', type=int,
+                        help="If the RAM of a reading surpasses this value, information about most RAM intensive processes will be sent")
+    parser.add_argument('-cputh', '--cputhreshold', type=int,
+                        help="If the CPU of a reading surpasses this value, information about most CPU intensive processes will be sent")
+    parser.add_argument('-diskth', '--diskthreshold', type=int,
+                        help="If the disk of a reading surpasses this value, information about most disk intensive processes will be sent")
+    parser.add_argument('-n', '--numprocesses', type=int,
+                        help="Number of top processes to be sent when a resource surpasses the threshold")
+
     args = parser.parse_args()
+
     if args.frequency:
         global FREQUENCY
         FREQUENCY = args.frequency
+    
     if args.duration:
         global DURATION, INFINITE
         DURATION = args.duration
         INFINITE = False
+    
     if args.pport:
         global UNACLOUD_PORT
         UNACLOUD_PORT = args.pport
     unacloud_process = ProcessUtils(port=UNACLOUD_PORT)
+
+    if args.ramthreshold:
+        global RAM_THRESHOLD
+        RAM_THRESHOLD = args.ramthreshold
+    
+    if args.diskthreshold:
+        global DISK_THRESHOLD
+        DISK_THRESHOLD = args.cputhreshold
+
+    if args.cputhreshold:
+        global CPU_THRESHOLD
+        CPU_THRESHOLD = args.cputhreshold
+
+    if args.numprocesses:
+        global NUM_PROCESSES
+        NUM_PROCESSES = args.numprocesses
 
 
 def main():
@@ -61,7 +94,7 @@ def main():
 
 
 def get_system_info():
-    return {
+    info = {
         "timestamp": dh.format_time(),
         "ip": network_utils.get_ip_addr(),
         "ram": ram_utils.get_ram_percent(),
@@ -77,8 +110,15 @@ def get_system_info():
         "unacloud_status": 1 if unacloud_process.get_process_status() == "running" else 0
     }
 
+    for critical_resource in resources_above_threshold(info):
+        db.post_critical_processes(proc_utils.get_top_processes(critical_resource))
+
+    return info
+
 def get_initial_info():
     return {
+        "timestamp": dh.format_time(),
+        "ip": network_utils.get_ip_addr(),
         "cpu_count": cpu_utils.get_cpu_count(),
         "disk_partitions": disk_utils.get_disk_partitions(),
         "total_ram": ram_utils.get_ram_percent(total=True),
@@ -86,6 +126,15 @@ def get_initial_info():
         "total_disc": disk_utils.get_disk_percent(total=True)
     }
 
+def resources_above_threshold(info):
+    critical_resources = []
+    if info["ram"]["percent"] > RAM_THRESHOLD:
+        critical_resources.append("ram")
+    if info["cpu"]["percent"] > CPU_THRESHOLD:
+        critical_resources.append("cpu")
+    if info["disk"]["percent"] > DISK_THRESHOLD:
+        critical_resources.append("disk")
+    return critical_resources
 
 if __name__ == "__main__":
     main()

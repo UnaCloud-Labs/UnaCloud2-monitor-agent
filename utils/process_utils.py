@@ -26,6 +26,24 @@ class ProcessUtils:
     
     def get_process_status(self):
         return self.process.status() if self.process else ''
+    
+    @staticmethod
+    def get_processes_info():
+        processes_info = []
+        for p in psutil.process_iter():
+            try:
+                pInfo = p.as_dict(attrs=['pid', 'name', 'username', 'cpu_percent', 'memory_percent'])
+                current_process = psutil.Process(pid=p['pid'])
+                pInfo["cpu_info"] = current_process.cpu_percent(interval=0.1)
+                processes_info.append(pInfo)
+            except psutil.NoSuchProcess:
+                pass
+        return processes_info
+
+    @staticmethod
+    def get_top_processes(amount, resource="cpu"):
+        processes = ProcessUtils.get_processes_info()
+
 
     @staticmethod
     def count_processes_by_name(name):
