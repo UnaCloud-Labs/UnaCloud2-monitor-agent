@@ -83,11 +83,11 @@ def parse_arguments():
 
 def main():
     parse_arguments()
-    print(db.post_hardware_info(get_initial_info()))
+    db.post_hardware_info(get_initial_info())
     curr_duration = DURATION
     while (curr_duration > 0) or INFINITE:
         start_time = time()
-        print(db.post_metric(get_system_info()))
+        db.post_metric(get_system_info())
         if not INFINITE:
             curr_duration = curr_duration - FREQUENCY
         sleep(FREQUENCY - ((time() - start_time) % FREQUENCY))
@@ -112,7 +112,7 @@ def get_system_info():
     }
 
     for critical_resource in resources_above_threshold(info):
-        print(get_processes_info(critical_resource))
+        db.post_critical_processes(critical_resource)
 
     return info
 
@@ -146,7 +146,14 @@ def resources_above_threshold(info):
     return critical_resources
 
 def get_unacloud_partition():
-    return "C://"
+    try:
+        local_properties = open('local.properties', 'r')
+        lines = local_properties.readlines()
+        for line in lines:
+            if line.startswith("DATA_PATH"):
+                return line.split('=')[1].replace("\\:", ":").replace("\\", "/")
+    except (IOError, ValueError):
+        return "C://"
 
 if __name__ == "__main__":
-    main()
+    print(get_unacloud_partition())
