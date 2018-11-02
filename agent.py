@@ -111,7 +111,7 @@ def get_system_info():
     }
 
     for critical_resource in resources_above_threshold(info):
-        db.post_critical_processes(proc_utils.get_top_processes(critical_resource))
+        db.post_critical_processes(get_processes_info(critical_resource))
 
     return info
 
@@ -126,6 +126,13 @@ def get_initial_info():
         "total_disc": disk_utils.get_disk_percent(total=True)
     }
 
+def get_processes_info(critical_resource):
+    return {
+        "ip": network_utils.get_ip_addr(),
+        "critical_resource": critical_resource,
+        "processes": ProcessUtils.get_top_processes(critical_resource)
+    }
+
 def resources_above_threshold(info):
     critical_resources = []
     if info["ram"]["percent"] > RAM_THRESHOLD:
@@ -137,4 +144,4 @@ def resources_above_threshold(info):
     return critical_resources
 
 if __name__ == "__main__":
-    main()
+    print(ProcessUtils.get_top_processes(5, resource="ram"))

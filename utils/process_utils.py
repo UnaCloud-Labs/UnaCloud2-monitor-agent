@@ -33,8 +33,6 @@ class ProcessUtils:
         for p in psutil.process_iter():
             try:
                 pInfo = p.as_dict(attrs=['pid', 'name', 'username', 'cpu_percent', 'memory_percent'])
-                current_process = psutil.Process(pid=p['pid'])
-                pInfo["cpu_info"] = current_process.cpu_percent(interval=0.1)
                 processes_info.append(pInfo)
             except psutil.NoSuchProcess:
                 pass
@@ -43,7 +41,14 @@ class ProcessUtils:
     @staticmethod
     def get_top_processes(amount, resource="cpu"):
         processes = ProcessUtils.get_processes_info()
-
+        if resource == "cpu":
+            processes.sort(key=dh.sort_process_cpu)
+        if resource == "ram":
+            processes.sort(key=dh.sort_process_ram)
+        if amount >= len(processes):
+            return processes
+        else:
+            return processes[0:amount]
 
     @staticmethod
     def count_processes_by_name(name):
