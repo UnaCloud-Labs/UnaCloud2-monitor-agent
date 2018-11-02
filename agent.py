@@ -15,20 +15,20 @@ FREQUENCY = 1
 INFINITE = True
 DURATION = 0
 UNACLOUD_PORT = 10027
+RTT_FREQUENCY = 10
 
 RAM_THRESHOLD = 75
 CPU_THRESHOLD = 75
 DISK_THRESHOLD = 75
 NUM_PROCESSES = 5
 
-network_utils = NetworkUtils()
-cpu_utils = CPUUtils()
-ram_utils = RAMUtils()
-disk_utils = DiskUtils()
-vm_utils = VMUtils()
-vbox_process = ProcessUtils(VMUtils.VBOX_PROCESS)
+cpu_utils = None
+ram_utils = None
+disk_utils = None
+vm_utils = None
+vbox_process = None
 unacloud_process = None
-
+network_utils = None
 
 def parse_arguments():
     global unacloud_process
@@ -47,7 +47,8 @@ def parse_arguments():
                         help="If the disk of a reading surpasses this value, information about most disk intensive processes will be sent")
     parser.add_argument('-n', '--numprocesses', type=int,
                         help="Number of top processes to be sent when a resource surpasses the threshold")
-
+    parser.add_argument('-rtt', '--rttfrequency', type=int,
+                        help="Frequency (in seconds) with which the agent will measure the RTT")
     args = parser.parse_args()
 
     if args.frequency:
@@ -62,7 +63,6 @@ def parse_arguments():
     if args.pport:
         global UNACLOUD_PORT
         UNACLOUD_PORT = args.pport
-    unacloud_process = ProcessUtils(port=UNACLOUD_PORT)
 
     if args.ramthreshold:
         global RAM_THRESHOLD
@@ -80,9 +80,24 @@ def parse_arguments():
         global NUM_PROCESSES
         NUM_PROCESSES = args.numprocesses
 
+    if args.rttfrequency:
+        global RTT_FREQUENCY
+        RTT_FREQUENCY = args.rttfrequency
+
+def initialize_utils():
+    global cpu_utils, ram_utils, disk_utils, vm_utils, vbox_process, unacloud_process, network_utils
+    cpu_utils = CPUUtils()
+    ram_utils = RAMUtils()
+    disk_utils = DiskUtils()
+    vm_utils = VMUtils()
+    vbox_process = ProcessUtils(VMUtils.VBOX_PROCESS)
+    unacloud_process = ProcessUtils(port=UNACLOUD_PORT)
+    network_utils = NetworkUtils(RTT_FREQUENCY)
+
 
 def main():
     parse_arguments()
+    initialize_utils()
     db.post_hardware_info(get_initial_info())
     curr_duration = DURATION
     while (curr_duration > 0) or INFINITE:
@@ -108,7 +123,8 @@ def get_system_info():
         "running_vms": vm_utils.get_vms(),
         "virtualbox_status": vm_utils.get_vbox_status(),
         "vbox_process_count": ProcessUtils.count_processes_by_name(VMUtils.VBOX_PROCESS),
-        "unacloud_status": 1 if unacloud_process.get_process_status() == "running" else 0
+        "unacloud_status": 1 if unacloud_process.get_process_status() == "running" else 0,
+        "rtt": network_utils.get_rtt()
     }
 
     for critical_resource in resources_above_threshold(info):
@@ -156,4 +172,4 @@ def get_unacloud_partition():
         return "C://"
 
 if __name__ == "__main__":
-    print(get_unacloud_partition())
+    main()
