@@ -83,11 +83,11 @@ def parse_arguments():
 
 def main():
     parse_arguments()
-    db.post_hardware_info(get_initial_info())
+    print(db.post_hardware_info(get_initial_info()))
     curr_duration = DURATION
     while (curr_duration > 0) or INFINITE:
         start_time = time()
-        db.post_metric(get_system_info())
+        print(db.post_metric(get_system_info()))
         if not INFINITE:
             curr_duration = curr_duration - FREQUENCY
         sleep(FREQUENCY - ((time() - start_time) % FREQUENCY))
@@ -100,6 +100,7 @@ def get_system_info():
         "ram": ram_utils.get_ram_percent(),
         "swap": ram_utils.get_swap_memory(),
         "disk": disk_utils.get_disk_percent(),
+        "unacloud_disk": disk_utils.get_disk_percent(partition=get_unacloud_partition()),
         "cpu": cpu_utils.get_cpu_percent(),
         "cpu_details": cpu_utils.get_percpu_peruser_percent(),
         "net_io_counters": network_utils.get_net_io_counters(),
@@ -111,7 +112,7 @@ def get_system_info():
     }
 
     for critical_resource in resources_above_threshold(info):
-        db.post_critical_processes(get_processes_info(critical_resource))
+        print(get_processes_info(critical_resource))
 
     return info
 
@@ -123,25 +124,29 @@ def get_initial_info():
         "disk_partitions": disk_utils.get_disk_partitions(),
         "total_ram": ram_utils.get_ram_percent(total=True),
         "total_swap": ram_utils.get_swap_memory(total=True),
-        "total_disc": disk_utils.get_disk_percent(total=True)
+        "total_disk": disk_utils.get_disk_percent(total=True),
+        "total_unacloud_disk": disk_utils.get_disk_percent(total=True, partition=get_unacloud_partition())
     }
 
 def get_processes_info(critical_resource):
     return {
         "ip": network_utils.get_ip_addr(),
         "critical_resource": critical_resource,
-        "processes": ProcessUtils.get_top_processes(critical_resource)
+        "processes": ProcessUtils.get_top_processes(NUM_PROCESSES, resource=critical_resource)
     }
 
 def resources_above_threshold(info):
     critical_resources = []
     if info["ram"]["percent"] > RAM_THRESHOLD:
         critical_resources.append("ram")
-    if info["cpu"]["percent"] > CPU_THRESHOLD:
+    if info["cpu"] > CPU_THRESHOLD:
         critical_resources.append("cpu")
     if info["disk"]["percent"] > DISK_THRESHOLD:
         critical_resources.append("disk")
     return critical_resources
 
+def get_unacloud_partition():
+    return "C://"
+
 if __name__ == "__main__":
-    print(ProcessUtils.get_top_processes(5, resource="ram"))
+    main()

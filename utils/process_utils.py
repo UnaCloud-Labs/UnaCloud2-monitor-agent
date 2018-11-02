@@ -45,7 +45,7 @@ class ProcessUtils:
             processes.sort(key=dh.sort_process_cpu)
         if resource == "ram":
             processes.sort(key=dh.sort_process_ram)
-        if amount >= len(processes):
+        if int(amount) >= len(processes):
             return processes
         else:
             return processes[0:amount]
