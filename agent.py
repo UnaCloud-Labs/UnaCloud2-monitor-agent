@@ -169,7 +169,7 @@ def get_unacloud_partition():
             if line.startswith("DATA_PATH"):
                 return line.split('=')[1].replace("\\:", ":").replace("\\", "/")
     except (IOError, ValueError):
-        return "C://"
+        return "E://"
 
 if __name__ == "__main__":
     main()
