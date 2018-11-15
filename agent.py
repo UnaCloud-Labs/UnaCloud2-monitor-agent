@@ -98,11 +98,15 @@ def initialize_utils():
 def main():
     parse_arguments()
     initialize_utils()
-    db.post_hardware_info(get_initial_info())
+
+    response = db.post_hardware_info(get_initial_info())
+    process_response(response)
+
     curr_duration = DURATION
     while (curr_duration > 0) or INFINITE:
         start_time = time()
-        db.post_metric(get_system_info())
+        response = db.post_metric(get_system_info())
+        process_response(response)
         if not INFINITE:
             curr_duration = curr_duration - FREQUENCY
         sleep(FREQUENCY - ((time() - start_time) % FREQUENCY))
@@ -169,7 +173,12 @@ def get_unacloud_partition():
             if line.startswith("DATA_PATH"):
                 return line.split('=')[1].replace("\\:", ":").replace("\\", "/")
     except (IOError, ValueError):
-        return "E://"
+        return "C://"
+
+def process_response(response):
+    status_code = response.status_code
+    if status_code != 200:
+        
 
 if __name__ == "__main__":
     main()
