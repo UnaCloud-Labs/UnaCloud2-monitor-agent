@@ -99,13 +99,13 @@ def main():
     parse_arguments()
     initialize_utils()
 
-    response = db.post_hardware_info(get_initial_info())
+    response = db.post(db.initial_info, get_initial_info())
     process_response(response)
 
     curr_duration = DURATION
     while (curr_duration > 0) or INFINITE:
         start_time = time()
-        response = db.post_metric(get_system_info())
+        response = db.post(db.metric, get_system_info())
         process_response(response)
         if not INFINITE:
             curr_duration = curr_duration - FREQUENCY
@@ -132,7 +132,7 @@ def get_system_info():
     }
 
     for critical_resource in resources_above_threshold(info):
-        db.post_critical_processes(critical_resource)
+        db.post(db.processes, critical_resource)
 
     return info
 
@@ -153,6 +153,12 @@ def get_processes_info(critical_resource):
         "ip": network_utils.get_ip_addr(),
         "critical_resource": critical_resource,
         "processes": ProcessUtils.get_top_processes(NUM_PROCESSES, resource=critical_resource)
+    }
+
+def get_offline_data():
+    return {
+        "ip": network_utils.get_ip_addr(),
+        "timeOffline": network_utils.get_offline_counter() * FREQUENCY
     }
 
 def resources_above_threshold(info):
@@ -178,7 +184,12 @@ def get_unacloud_partition():
 def process_response(response):
     status_code = response.status_code
     if status_code != 200:
-        
+        network_utils.went_offline()
+    else:
+        if network_utils.is_offline():
+            db.post(db.offline, get_offline_data())
+        network_utils.went_online()
+
 
 if __name__ == "__main__":
     main()

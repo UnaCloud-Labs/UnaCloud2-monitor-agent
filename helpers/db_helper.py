@@ -1,17 +1,22 @@
 import requests
 
 
-url = "http://157.253.205.40:3000/{}"
-createMetric = "createMetric"
-hardwareInfo = "hardwareInfo"
+base_url = "http://157.253.205.40:3000/{}"
+
+metric = "createMetric"
+initial_info = "hardwareInfo"
 processes = "processes"
+offline = "recoveredData"
+print_payload = False
 
+error_response = requests.Response()
+error_response.status_code = 0
 
-def post_metric(payload):
-    return requests.post(url.format(createMetric), json=payload)
-
-def post_hardware_info(payload):
-    return requests.post(url.format(hardwareInfo), json=payload)
-
-def post_critical_processes(payload):
-    return requests.post(url.format(processes), json=payload)
+def post(url, payload):
+    if print_payload:
+        print(payload)
+    try:
+        return requests.post(base_url.format(url), json=payload)
+    except OSError:
+        print(OSError)
+        return error_response
