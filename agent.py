@@ -177,7 +177,7 @@ def get_unacloud_partition():
         lines = local_properties.readlines()
         for line in lines:
             if line.startswith("DATA_PATH"):
-                return line.split('=')[1].replace("\\:", ":").replace("\\", "/")
+                return line.split('=')[1].replace("\\:", ":").replace("\\", "/").strip()
     except (IOError, ValueError):
         return "C://"
 
