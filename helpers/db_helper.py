@@ -16,7 +16,7 @@ def post(url, payload):
     if print_payload:
         print(payload)
     try:
-        return requests.post(base_url.format(url), json=payload)
+        return requests.post(base_url.format(url), json=payload, timeout=0.5)
     except OSError:
         print(OSError)
         return error_response

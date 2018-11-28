@@ -6,6 +6,7 @@ import helpers.db_helper as db
 import helpers.data_helper as dh
 from utils.cpu_utils import CPUUtils
 from utils.disk_utils import DiskUtils
+from utils.energy_utils import EnergyUtils
 from utils.network_utils import NetworkUtils
 from utils.ram_utils import RAMUtils
 from utils.vm_utils import VMUtils
@@ -16,12 +17,14 @@ INFINITE = True
 DURATION = 0
 UNACLOUD_PORT = 10027
 RTT_FREQUENCY = 10
+PG_DURATION = 10
 
 RAM_THRESHOLD = 75
 CPU_THRESHOLD = 75
 DISK_THRESHOLD = 75
 NUM_PROCESSES = 5
 
+properties = None
 cpu_utils = None
 ram_utils = None
 disk_utils = None
@@ -29,6 +32,7 @@ vm_utils = None
 vbox_process = None
 unacloud_process = None
 network_utils = None
+energy_utils = None
 
 def parse_arguments():
     global unacloud_process
@@ -49,6 +53,8 @@ def parse_arguments():
                         help="Number of top processes to be sent when a resource surpasses the threshold")
     parser.add_argument('-rtt', '--rttfrequency', type=int,
                         help="Frequency (in seconds) with which the agent will measure the RTT")
+    parser.add_argument('-pg', '--pgduration', type=int,
+                        help="Duration (in seconds) with which the agent will measure power consumption")
     args = parser.parse_args()
 
     if args.frequency:
@@ -83,9 +89,15 @@ def parse_arguments():
     if args.rttfrequency:
         global RTT_FREQUENCY
         RTT_FREQUENCY = args.rttfrequency
+    
+    if args.pgduration:
+        global PG_DURATION
+        PG_DURATION = args.pgduration
+
 
 def initialize_utils():
-    global cpu_utils, ram_utils, disk_utils, vm_utils, vbox_process, unacloud_process, network_utils
+    global cpu_utils, ram_utils, disk_utils, vm_utils, vbox_process, unacloud_process, network_utils, energy_utils, properties
+    properties = dh.get_local_properties()
     cpu_utils = CPUUtils()
     ram_utils = RAMUtils()
     disk_utils = DiskUtils()
@@ -93,6 +105,7 @@ def initialize_utils():
     vbox_process = ProcessUtils(VMUtils.VBOX_PROCESS)
     unacloud_process = ProcessUtils(port=UNACLOUD_PORT)
     network_utils = NetworkUtils(RTT_FREQUENCY)
+    energy_utils = EnergyUtils(properties['pg_path'], properties['pg_exe'], PG_DURATION)
 
 
 def main():
@@ -100,17 +113,16 @@ def main():
     initialize_utils()
 
     response = db.post(db.initial_info, get_initial_info())
-    process_response(response)
+    handle_response(response)
 
     curr_duration = DURATION
     while (curr_duration > 0) or INFINITE:
         start_time = time()
         response = db.post(db.metric, get_system_info())
-        process_response(response)
+        handle_response(response)
         if not INFINITE:
             curr_duration = curr_duration - FREQUENCY
         sleep(FREQUENCY - ((time() - start_time) % FREQUENCY))
-
 
 def get_system_info():
     info = {
@@ -119,7 +131,7 @@ def get_system_info():
         "ram": ram_utils.get_ram_percent(),
         "swap": ram_utils.get_swap_memory(),
         "disk": disk_utils.get_disk_percent(),
-        "unacloud_disk": disk_utils.get_disk_percent(partition=get_unacloud_partition()),
+        "unacloud_disk": disk_utils.get_disk_percent(partition=properties['partition']),
         "cpu": cpu_utils.get_cpu_percent(),
         "cpu_details": cpu_utils.get_percpu_peruser_percent(),
         "net_io_counters": network_utils.get_net_io_counters(),
@@ -128,13 +140,13 @@ def get_system_info():
         "virtualbox_status": vm_utils.get_vbox_status(),
         "vbox_process_count": ProcessUtils.count_processes_by_name(VMUtils.VBOX_PROCESS),
         "unacloud_status": 1 if unacloud_process.get_process_status() == "running" else 0,
-        "rtt": network_utils.get_rtt()
+        "rtt": network_utils.get_rtt(),
+        "energy": energy_utils.get_power_consumption()
     }
-
     for critical_resource in resources_above_threshold(info):
         db.post(db.processes, critical_resource)
-
     return info
+
 
 def get_initial_info():
     return {
@@ -145,7 +157,7 @@ def get_initial_info():
         "total_ram": ram_utils.get_ram_percent(total=True),
         "total_swap": ram_utils.get_swap_memory(total=True),
         "total_disk": disk_utils.get_disk_percent(total=True),
-        "total_unacloud_disk": disk_utils.get_disk_percent(total=True, partition=get_unacloud_partition())
+        "total_unacloud_disk": disk_utils.get_disk_percent(total=True, partition=properties['partition'])
     }
 
 def get_processes_info(critical_resource):
@@ -171,17 +183,7 @@ def resources_above_threshold(info):
         critical_resources.append("disk")
     return critical_resources
 
-def get_unacloud_partition():
-    try:
-        local_properties = open('local.properties', 'r')
-        lines = local_properties.readlines()
-        for line in lines:
-            if line.startswith("DATA_PATH"):
-                return line.split('=')[1].replace("\\:", ":").replace("\\", "/").strip()
-    except (IOError, ValueError):
-        return "C://"
-
-def process_response(response):
+def handle_response(response):
     status_code = response.status_code
     if status_code != 200:
         network_utils.went_offline()

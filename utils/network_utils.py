@@ -26,16 +26,16 @@ class NetworkUtils:
             start_time = time()
             ping_proc = subprocess.Popen("ping 157.253.236.113", stdout=subprocess.PIPE)
             ping_output = ping_proc.stdout.read().decode('utf-8')
-            average_regex = r'Average = ([0-9]+)ms'
+            average_regex = r'(\bMedia\b|\bAverage\b) = ([0-9]+)ms'
             new_rtt = re.search(average_regex, ping_output)
             if new_rtt:
-                self.RTT = int(new_rtt.group(1))
+                self.RTT = int(new_rtt.group(2))
             else:
                 self.RTT = -1
             sleep(self.rtt_freq - ((time() - start_time)))
 
     def get_ip_addr(self):
-        if(not self.IP):
+        if not self.IP:
             self.set_ip_addr()
         return self.IP
 
