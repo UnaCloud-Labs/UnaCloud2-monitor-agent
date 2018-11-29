@@ -14,7 +14,11 @@ def sort_process_ram(process):
     return process["memory_percent"]
 
 def get_local_properties():
-    properties = {}
+    properties = {
+            'partition': 'C://',
+            'pg_path': 'C:/Program Files/Intel/Power Gadget 3.0/',
+            'pg_exe': 'PowerLog3.0.exe'
+        }
     try:
         local_properties = open('local.properties', 'r')
         lines = local_properties.readlines()
@@ -27,8 +31,4 @@ def get_local_properties():
                 properties["pg_exe"] = line.split('=')[1].replace("\\\\", "/").strip()
         return properties
     except (IOError, ValueError):
-        return {
-            'partition': 'C://',
-            'pg_path': 'C:/Program Files/Intel/Power Gadget 3.0/',
-            'pg_exe': 'PowerLog3.0.exe'
-        }
+        return properties

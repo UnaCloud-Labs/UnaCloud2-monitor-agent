@@ -12,6 +12,8 @@ from utils.ram_utils import RAMUtils
 from utils.vm_utils import VMUtils
 from utils.process_utils import ProcessUtils
 
+CURR_VERSION = "4.1"
+
 FREQUENCY = 1
 INFINITE = True
 DURATION = 0
@@ -55,6 +57,8 @@ def parse_arguments():
                         help="Frequency (in seconds) with which the agent will measure the RTT")
     parser.add_argument('-pg', '--pgduration', type=int,
                         help="Duration (in seconds) with which the agent will measure power consumption")
+    parser.add_argument('--version', action='store_true',
+                        help="Print the version of the agent")
     args = parser.parse_args()
 
     if args.frequency:
@@ -94,6 +98,8 @@ def parse_arguments():
         global PG_DURATION
         PG_DURATION = args.pgduration
 
+    return args.version
+
 
 def initialize_utils():
     global cpu_utils, ram_utils, disk_utils, vm_utils, vbox_process, unacloud_process, network_utils, energy_utils, properties
@@ -109,7 +115,14 @@ def initialize_utils():
 
 
 def main():
-    parse_arguments()
+    only_print_version = parse_arguments()
+    if only_print_version:
+        print_version()
+    else:
+        run()
+
+
+def run():
     initialize_utils()
 
     response = db.post(db.initial_info, get_initial_info())
@@ -123,6 +136,7 @@ def main():
         if not INFINITE:
             curr_duration = curr_duration - FREQUENCY
         sleep(FREQUENCY - ((time() - start_time) % FREQUENCY))
+
 
 def get_system_info():
     info = {
@@ -191,6 +205,9 @@ def handle_response(response):
         if network_utils.is_offline():
             db.post(db.offline, get_offline_data())
         network_utils.went_online()
+
+def print_version():
+    print(CURR_VERSION)
 
 
 if __name__ == "__main__":
