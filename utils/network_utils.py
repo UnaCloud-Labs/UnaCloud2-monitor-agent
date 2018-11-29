@@ -25,7 +25,7 @@ class NetworkUtils:
         while (True):
             start_time = time()
             ping_proc = subprocess.Popen("ping 157.253.236.113", stdout=subprocess.PIPE)
-            ping_output = ping_proc.stdout.read().decode('utf-8')
+            ping_output = "".join(map(chr, ping_proc.stdout.read()))
             average_regex = r'(\bMedia\b|\bAverage\b) = ([0-9]+)ms'
             new_rtt = re.search(average_regex, ping_output)
             if new_rtt:
