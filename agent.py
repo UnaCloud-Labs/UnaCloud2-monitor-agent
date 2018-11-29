@@ -12,7 +12,7 @@ from utils.ram_utils import RAMUtils
 from utils.vm_utils import VMUtils
 from utils.process_utils import ProcessUtils
 
-CURR_VERSION = "4.1"
+CURR_VERSION = "4.2"
 
 FREQUENCY = 1
 INFINITE = True
@@ -135,7 +135,9 @@ def run():
         handle_response(response)
         if not INFINITE:
             curr_duration = curr_duration - FREQUENCY
-        sleep(FREQUENCY - ((time() - start_time) % FREQUENCY))
+        sleep_duration = FREQUENCY - ((time() - start_time) % FREQUENCY)
+        if sleep_duration > 0:
+            sleep(sleep_duration)
 
 
 def get_system_info():

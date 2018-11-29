@@ -32,7 +32,9 @@ class NetworkUtils:
                 self.RTT = int(new_rtt.group(2))
             else:
                 self.RTT = -1
-            sleep(self.rtt_freq - ((time() - start_time)))
+            sleep_duration = self.rtt_freq - (time() - start_time)
+            if sleep_duration > 0:
+                sleep(sleep_duration)
 
     def get_ip_addr(self):
         if not self.IP:
