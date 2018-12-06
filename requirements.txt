@@ -1,4 +1,2 @@
 psutil
-pyvbox
-pylint
 requests
