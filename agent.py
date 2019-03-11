@@ -11,6 +11,7 @@ from utils.network_utils import NetworkUtils
 from utils.ram_utils import RAMUtils
 from utils.vm_utils import VMUtils
 from utils.process_utils import ProcessUtils
+from utils.user_utils import UserUtils
 
 CURR_VERSION = "4.2"
 
@@ -35,10 +36,12 @@ vbox_process = None
 unacloud_process = None
 network_utils = None
 energy_utils = None
+user_utils = None
+
 
 def parse_arguments():
     global unacloud_process
-    parser=argparse.ArgumentParser(description="Monitor the machine's resources")
+    parser = argparse.ArgumentParser(description="Monitor the machine's resources")
     parser.add_argument('-f', '--frequency', type=int,
                         help='Frequency (in seconds) with which the agent will send system information')
     parser.add_argument('-d', '--duration', type=int,
@@ -64,12 +67,12 @@ def parse_arguments():
     if args.frequency:
         global FREQUENCY
         FREQUENCY = args.frequency
-    
+
     if args.duration:
         global DURATION, INFINITE
         DURATION = args.duration
         INFINITE = False
-    
+
     if args.pport:
         global UNACLOUD_PORT
         UNACLOUD_PORT = args.pport
@@ -77,7 +80,7 @@ def parse_arguments():
     if args.ramthreshold:
         global RAM_THRESHOLD
         RAM_THRESHOLD = args.ramthreshold
-    
+
     if args.diskthreshold:
         global DISK_THRESHOLD
         DISK_THRESHOLD = args.cputhreshold
@@ -93,7 +96,7 @@ def parse_arguments():
     if args.rttfrequency:
         global RTT_FREQUENCY
         RTT_FREQUENCY = args.rttfrequency
-    
+
     if args.pgduration:
         global PG_DURATION
         PG_DURATION = args.pgduration
@@ -102,7 +105,7 @@ def parse_arguments():
 
 
 def initialize_utils():
-    global cpu_utils, ram_utils, disk_utils, vm_utils, vbox_process, unacloud_process, network_utils, energy_utils, properties
+    global cpu_utils, ram_utils, disk_utils, vm_utils, vbox_process, unacloud_process, network_utils, energy_utils, user_utils, properties
     properties = dh.get_local_properties()
     cpu_utils = CPUUtils()
     ram_utils = RAMUtils()
@@ -112,6 +115,7 @@ def initialize_utils():
     unacloud_process = ProcessUtils(port=UNACLOUD_PORT)
     network_utils = NetworkUtils(RTT_FREQUENCY)
     energy_utils = EnergyUtils(properties['pg_path'], properties['pg_exe'], PG_DURATION)
+    user_utils = UserUtils()
 
 
 def main():
@@ -142,7 +146,7 @@ def run():
 
 def get_system_info():
     info = {
-        "timestamp": dh.format_time(),
+		"timestamp": dh.format_time(),
         "ip": network_utils.get_ip_addr(),
         "ram": ram_utils.get_ram_percent(),
         "swap": ram_utils.get_swap_memory(),
@@ -157,7 +161,8 @@ def get_system_info():
         "vbox_process_count": ProcessUtils.count_processes_by_name(VMUtils.VBOX_PROCESS),
         "unacloud_status": 1 if unacloud_process.get_process_status() == "running" else 0,
         "rtt": network_utils.get_rtt(),
-        "energy": energy_utils.get_power_consumption()
+        "energy": energy_utils.get_power_consumption(),
+        "user_logged": user_utils.get_users_logged()
     }
     for critical_resource in resources_above_threshold(info):
         db.post(db.processes, critical_resource)
@@ -176,6 +181,8 @@ def get_initial_info():
         "total_unacloud_disk": disk_utils.get_disk_percent(total=True, partition=properties['partition'])
     }
 
+
+
 def get_processes_info(critical_resource):
     return {
         "ip": network_utils.get_ip_addr(),
@@ -183,11 +190,13 @@ def get_processes_info(critical_resource):
         "processes": ProcessUtils.get_top_processes(NUM_PROCESSES, resource=critical_resource)
     }
 
+
 def get_offline_data():
     return {
         "ip": network_utils.get_ip_addr(),
         "timeOffline": network_utils.get_offline_counter() * FREQUENCY
     }
+
 
 def resources_above_threshold(info):
     critical_resources = []
@@ -199,6 +208,7 @@ def resources_above_threshold(info):
         critical_resources.append("disk")
     return critical_resources
 
+
 def handle_response(response):
     status_code = response.status_code
     if status_code != 200:
@@ -207,6 +217,7 @@ def handle_response(response):
         if network_utils.is_offline():
             db.post(db.offline, get_offline_data())
         network_utils.went_online()
+
 
 def print_version():
     print(CURR_VERSION)
