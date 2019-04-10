@@ -5,7 +5,7 @@ import _thread
 from time import sleep, time
 from urllib.request import urlopen
 import helpers.data_helper as dh
-
+import ifaddr
 
 class NetworkUtils:
 
@@ -42,11 +42,21 @@ class NetworkUtils:
         return self.IP
 
     def set_ip_addr(self):
+        foundIt = False
+        adapters = ifaddr.get_adapters()
+        for adapter in adapters:
+            if foundIt:
+                break
+            if "Ethernet Connection" in adapter.nice_name or "Family Controller" in adapter.nice_name:
+                for ip in adapter.ips:
+                    if len(ip.ip) > 12 and len(ip.ip) < 20:
+                        self.IP = ip.ip	
+        '''
         try:
             self.IP = urlopen('http://ip.42.pl/raw').read().decode("utf-8")
         except OSError:
             pass
-
+        '''
     def get_net_stats(self):
         stats = psutil.net_if_stats()
         for key, value in stats.items():
